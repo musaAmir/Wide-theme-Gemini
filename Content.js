@@ -1,4 +1,4 @@
-let geminiWidth = 1250;
+let geminiWidth = localStorage.getItem('geminiWidth') || screen.width;
 
 (function() {
     const sliderContainer = document.createElement('div');
@@ -8,7 +8,7 @@ let geminiWidth = 1250;
     document.body.appendChild(sliderContainer);
   
     const sliderMarkup = `
-      <input type="range" min="50" max="5000" value="5000" class="slider">
+      <input type="range" min="50" max="${screen.width}" value="${geminiWidth}" class="slider">
     `;
     
     sliderContainer.innerHTML = sliderMarkup;
@@ -17,6 +17,7 @@ let geminiWidth = 1250;
 
     slider.addEventListener('input', (event) => {
       const currentValue = event.target.value;
+      localStorage.setItem('geminiWidth', currentValue);
       geminiWidth = currentValue;
       console.log(geminiWidth);
       changeElementsSize();
@@ -77,7 +78,7 @@ let geminiWidth = 1250;
           conversationContainers.forEach((container) => {
             container.style.width = geminiWidth + 'px'; 
             container.style.maxWidth = '100%';
-            container.style.minWidth = '30%';
+            container.style.minWidth = '15%';
           });
         }
       })();
@@ -89,7 +90,7 @@ let geminiWidth = 1250;
           conversationContainers.forEach((container) => {
             container.style.width = geminiWidth + 'px';
             container.style.maxWidth = '100%';
-            container.style.minWidth = '55%';
+            container.style.minWidth = '27.5%';
           });
         }
       })();
@@ -101,7 +102,7 @@ let geminiWidth = 1250;
           conversationContainers.forEach((container) => {
             container.style.width = geminiWidth + 'px';
             container.style.maxWidth = '100%';
-            container.style.minWidth = '55%';
+            container.style.minWidth = '27.5%';
           });
         }
       })();
