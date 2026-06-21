@@ -39,11 +39,6 @@ const applyStyles = () => {
       el.style.minWidth = '15%';
     });
   });
-
-  document.querySelectorAll('.text-input-field').forEach((el) => {
-    el.style.height = 'auto';
-    el.style.minHeight = '120px';
-  });
 };
 
 const scheduleApply = () => {
