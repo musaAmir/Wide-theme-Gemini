@@ -1,10 +1,11 @@
 {
     "manifest_version": 3,
     "name": "Wide Theme Gemini",
-    "version": "1.0.0",
+    "version": "1.1.0",
+    "description": "Adjust the width of Google Gemini's chat interface with a draggable slider.",
     "content_scripts": [
       {
-        "matches": ["https://gemini.google.com/*", "https://gemini.google.com/*/*"],
+        "matches": ["https://gemini.google.com/*"],
         "js": ["Content.js"]
       }
     ],
