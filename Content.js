@@ -1,13 +1,14 @@
 const STORAGE_KEY = 'geminiWidth';
+const MIN_WIDTH = 160;
+const WIDTH_STEP = 10;
 const DEFAULT_WIDTH = Math.min(Math.floor(window.innerWidth * 0.8), 1200);
 
 let geminiWidth = Number(localStorage.getItem(STORAGE_KEY)) || DEFAULT_WIDTH;
 let rafId = null;
-let mutationTimeout = null;
 
 const getBounds = () => {
-  const min = Math.max(400, Math.floor(window.innerWidth * 0.4));
-  const max = Math.max(min, Math.floor(window.innerWidth * 0.95));
+  const max = Math.max(1, Math.floor(window.innerWidth));
+  const min = Math.min(MIN_WIDTH, max);
   return { min, max };
 };
 
@@ -22,23 +23,47 @@ const saveWidth = (value) => {
   localStorage.setItem(STORAGE_KEY, String(value));
 };
 
-const applyStyles = () => {
-  const widthPx = `${geminiWidth}px`;
-  // Base class names only — Angular's `.ng-star-inserted` helper is added and
-  // removed dynamically, so depending on it makes the selectors brittle.
-  const groups = [
-    '.conversation-container',
-    '.input-area-container',
-    '.bottom-container'
-  ];
+let widthStyle = null;
 
-  groups.forEach((selector) => {
-    document.querySelectorAll(selector).forEach((el) => {
-      el.style.width = widthPx;
-      el.style.maxWidth = '100%';
-      el.style.minWidth = '15%';
-    });
-  });
+const applyStyles = () => {
+  const w = geminiWidth;
+  if (!widthStyle) {
+    widthStyle = document.createElement('style');
+    widthStyle.id = 'gwide-width';
+    document.head.appendChild(widthStyle);
+  }
+  // One stylesheet, rewritten on every change. Unlike inline styles this also
+  // covers messages that are added after the slider moved.
+  widthStyle.textContent = `
+    /* Gemini reads its column width from these variables in a few places
+       (thinking overlay, image cards, new-chat input). */
+    chat-window,
+    chat-window-content,
+    .enable-luminous-content-width-update {
+      --bard-chat-window-content-width-default: ${w}px !important;
+      --bard-chat-window-max-width-default: ${w + 16}px !important;
+    }
+    /* Most of the layout ignores the variables and hard-codes 708px (or 660px
+       for the input) per element, using an ID-specificity hack, so !important
+       is the only way to override it. The .md-content rule mirrors Gemini's
+       own: every markdown block is clamped except tables/carousels. */
+    .conversation-container user-query,
+    .conversation-container model-response-disclaimers,
+    .conversation-container .response-container-header,
+    .conversation-container .response-container-footer,
+    .conversation-container .response-footer,
+    .conversation-container message-actions,
+    .md-content > :not(table):not(:has(base-carousel, compare-table, table-block, product-list)),
+    .input-area-container,
+    .initial-input-area-container,
+    .bottom-container {
+      max-width: ${w}px !important;
+    }
+    /* Gemini centres the action buttons with a formula that bakes in 708/2. */
+    .conversation-container message-actions {
+      margin-inline-start: calc(-6px + max(0px, 50% - ${w / 2}px)) !important;
+    }
+  `;
 };
 
 const scheduleApply = () => {
@@ -140,6 +165,7 @@ const scheduleApply = () => {
         class="gwide-slider"
         min="${min}"
         max="${max}"
+        step="${WIDTH_STEP}"
         value="${geminiWidth}"
         aria-label="Gemini width"
       />
@@ -198,15 +224,4 @@ const scheduleApply = () => {
   });
 })();
 
-function changeElementsSize() {
-  scheduleApply();
-}
-
-const observer = new MutationObserver(() => {
-  clearTimeout(mutationTimeout);
-  mutationTimeout = setTimeout(scheduleApply, 150);
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
-
-setTimeout(scheduleApply, 800);
+applyStyles();
